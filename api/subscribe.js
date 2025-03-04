@@ -1,36 +1,32 @@
 // api/subscribe.js
-import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-  // (Optional) Manually set CORS headers; these will also be applied via vercel.json.
+  // Optionally set CORS headers here, but vercel.json should handle them too.
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   // Only allow POST requests
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method Not Allowed' });
-    return;
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   // Parse the request body
   const { email } = req.body || {};
   if (!email) {
-    res.status(400).json({ error: 'Email is required' });
-    return;
+    return res.status(400).json({ error: 'Email is required' });
   }
 
   try {
     // Build the payload for MailerLite
     const payload = { email };
 
-    // Call MailerLite using the API key stored in the environment variable
+    // Use the built-in fetch (no node-fetch import needed)
     const mlResponse = await fetch('https://connect.mailerlite.com/api/subscribers', {
       method: 'POST',
       headers: {
@@ -43,13 +39,16 @@ export default async function handler(req, res) {
     });
 
     const mlData = await mlResponse.json();
+
     if (!mlResponse.ok) {
-      res.status(mlResponse.status).json(mlData);
-      return;
+      return res.status(mlResponse.status).json(mlData);
     }
-    res.status(200).json(mlData);
+
+    // Return MailerLite's successful response
+    return res.status(200).json(mlData);
+
   } catch (error) {
     console.error('Error calling MailerLite:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
