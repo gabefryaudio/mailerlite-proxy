@@ -7,27 +7,30 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight OPTIONS request
+  // Handle preflight OPTIONS request by ending the response
   if (req.method === 'OPTIONS') {
-    return res.status(200).json({});
+    res.status(200).end();
+    return;
   }
 
   // Only allow POST requests
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    res.status(405).json({ error: 'Method Not Allowed' });
+    return;
   }
 
   // Parse the request body
   const { email } = req.body || {};
   if (!email) {
-    return res.status(400).json({ error: 'Email is required' });
+    res.status(400).json({ error: 'Email is required' });
+    return;
   }
 
   try {
     // Build the payload for MailerLite
     const payload = { email };
 
-    // Make the request to MailerLite using the API key stored in the environment variable
+    // Make the request to MailerLite using the API key from environment variables
     const mlResponse = await fetch('https://connect.mailerlite.com/api/subscribers', {
       method: 'POST',
       headers: {
@@ -42,13 +45,14 @@ export default async function handler(req, res) {
     const mlData = await mlResponse.json();
 
     if (!mlResponse.ok) {
-      return res.status(mlResponse.status).json(mlData);
+      res.status(mlResponse.status).json(mlData);
+      return;
     }
 
-    // Return the successful response from MailerLite
-    return res.status(200).json(mlData);
+    // Return MailerLite's successful response
+    res.status(200).json(mlData);
   } catch (error) {
     console.error('Error calling MailerLite:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
