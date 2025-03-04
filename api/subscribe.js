@@ -2,12 +2,12 @@
 import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-  // Set CORS headers for every response
+  // Set CORS headers for every response (this is optional if vercel.json is used)
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight OPTIONS request by ending the response
+  // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     // Build the payload for MailerLite
     const payload = { email };
 
-    // Make the request to MailerLite using the API key from environment variables
+    // Make the request to MailerLite using the API key stored in an environment variable
     const mlResponse = await fetch('https://connect.mailerlite.com/api/subscribers', {
       method: 'POST',
       headers: {
